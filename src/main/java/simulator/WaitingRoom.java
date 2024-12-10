@@ -95,7 +95,6 @@ public class WaitingRoom {
     public void getsAttended(Patient patient) throws InterruptedException {
         mutex.acquire();
             // The patient is the first in the queue
-            // print(patient,0, ": is the first in the queue");
             patientReady.release();
             
             // Gets treated
@@ -142,7 +141,6 @@ public class WaitingRoom {
             if (patient != null) {
                 // If there is a patient taken from the queue its id is saved in a variable to sort it from the other patients in the queue
                 nextPatientId[doctor.getSpecialty()] = patient.getId();
-                // print(doctor,2, ": signal all patients that one is out.", GREEN);
                 // All the threads in the doctor's queue are signaled
                 queueSemaphores[doctor.getSpecialty()].release(numPatientsWaiting[doctor.getSpecialty()]);
                 mutex.release();
@@ -153,8 +151,6 @@ public class WaitingRoom {
                 newCase.acquire();
             }
         } while(patient == null);
-            
-        // print(doctor, 1, " out of the loop.");
     }
     public void entersQueue(Patient patient) throws InterruptedException{
         
@@ -177,7 +173,6 @@ public class WaitingRoom {
         
         String out = new String();
         for (PriorityBlockingQueue<Patient> queue : queues){
-            // out = new String();
             if(!queue.isEmpty())
             for(Patient patient : queue){
                 out += " " + patient.getName() + " |";
