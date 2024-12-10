@@ -6,6 +6,10 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class WaitingRoom {
+    final static String RESET = "\u001B[0m";
+    final static String RED = "\u001B[31m";
+    final static String GREEN = "\u001B[32m";
+    final static String YELLOW = "\u001B[33m";
     final static int NUMSPECIALTIES = 3;
     final static int NUMPATIENTS = 20;
     private Semaphore mutex;
@@ -44,7 +48,7 @@ public class WaitingRoom {
         mutex.acquire();
             // The patient registers their symptomps
             Thread.sleep(rand.nextInt(1000));
-            print(patient,0, ": registers");
+            print(patient,0, ": registers", RED);
             
             // The model assigns a specialty and a priority value
             patient.setSpecialty(rand.nextInt(NUMSPECIALTIES));
@@ -65,7 +69,7 @@ public class WaitingRoom {
         // The triage staff checks if the values of the model are correct
         patientRegistered.acquire();
         Thread.sleep(rand.nextInt(1000));
-        print(triage,2, ": The prediction has been validated");
+        print(triage,2, ": The prediction has been validated", YELLOW);
         triageValidated.release();
         
     }
@@ -73,32 +77,35 @@ public class WaitingRoom {
     public void attend(Doctor doctor) throws InterruptedException {
         
         // The doctor signals their patients that is ready
-        print(doctor,1, ": ready");
+        print(doctor,5, ": ready", GREEN);
         takePatientFromQueue(doctor);
         // And waits for the patient to awake
         patientReady.acquire();
-        print(doctor,1, ": treating");
+        print(doctor,5, ": treating", GREEN);
         Thread.sleep(rand.nextInt(1000) + 1000);
-        print(doctor,1, ": treating done");
         // The treatment is done
         doctorDone.release();
+        print(doctor,5, ": treating done", GREEN);
+    
         patientDone.acquire();
-        print(doctor,1, ": done\n");
+        print(doctor,5, ": done\n", GREEN);
         
     }
 
     public void getsAttended(Patient patient) throws InterruptedException {
         mutex.acquire();
             // The patient is the first in the queue
-            print(patient,0, ": is the first in the queue");
+            // print(patient,0, ": is the first in the queue");
             patientReady.release();
-            doctorDone.acquire();
+            
             // Gets treated
-            print(patient,0, ": treating");
-            Thread.sleep(rand.nextInt(1000) + 100);
-            print(patient,0, ": treatment done");
+            print(patient,5, ": treating", RED);
+            doctorDone.acquire();
             // Signals that they're done
             patientDone.release();
+            print(patient,5, ": treatment done", RED);
+            
+            
         mutex.release();
         
     }
@@ -108,7 +115,7 @@ public class WaitingRoom {
             // While the patient isnt the one that comes out of the queue, wait
             numPatientsWaiting[patient.getSpecialty()]++;
             while(patient.getId() != nextPatientId[patient.getSpecialty()]){
-                print(patient, 0, ": waits.");
+                print(patient, 2, ": waits.", RED);
                 mutex.release();
                 queueSemaphores[patient.getSpecialty()].acquire();
             }
@@ -116,30 +123,31 @@ public class WaitingRoom {
         mutex.acquire();
         // Since the thread exited the queue one less is waiting
             numPatientsWaiting[patient.getSpecialty()]--;
-            print(patient,0, ": turn arrived.");
-        
+            print(patient,3, ": turn arrived.", RED);
+            printWaitingRoom();    
         mutex.release();
         
     }
 
     private void takePatientFromQueue(Doctor doctor) throws InterruptedException{
         
-        print(doctor,1, ": about to take a pacient from the queue.");
+        print(doctor,2, ": about to take a pacient from the queue.", GREEN);
         Patient patient = null;
         // The doctor will remain in the loop until there is a patient in their queue
         do{
             mutex.acquire();
+            printWaitingRoom();
             // We take the patient with the highest priority from the queue of the doctor, with a timeout of 1 second
             patient = queues[doctor.getSpecialty()].poll(1, TimeUnit.SECONDS);
             if (patient != null) {
                 // If there is a patient taken from the queue its id is saved in a variable to sort it from the other patients in the queue
                 nextPatientId[doctor.getSpecialty()] = patient.getId();
-                print(doctor,1, ": signal all patients that one is out.");
+                // print(doctor,2, ": signal all patients that one is out.", GREEN);
                 // All the threads in the doctor's queue are signaled
                 queueSemaphores[doctor.getSpecialty()].release(numPatientsWaiting[doctor.getSpecialty()]);
                 mutex.release();
             } else {
-                print(doctor,1, ": has no patients in their queue.");
+                print(doctor,2, ": has no patients in their queue.", GREEN);
                 mutex.release();
                 // If there is no patients in the queue the doctor waits until there is a new case
                 newCase.acquire();
@@ -152,7 +160,7 @@ public class WaitingRoom {
         
         mutex.acquire();
             // The patient is added to the queue of their assigned specialty
-            print(patient,0, ": has been assigned to queue " + patient.getSpecialty() + " with priority " + patient.getPriority());
+            print(patient,0, ": has been assigned to queue " + patient.getSpecialty() + " with priority " + patient.getPriority(), RED);
             queues[patient.getSpecialty()].add(patient);
             // Signals that a new case has been added to a queue
             newCase.release();
@@ -160,10 +168,22 @@ public class WaitingRoom {
         mutex.release();
     }
 
-    private void print(Thread thread, int id, String msg) {
+    private void print(Thread thread, int id, String msg, String color) {
         
         String gap = new String(new char[id + 1]).replace('\0', '\t');
-        System.out.println(gap + "🖥️" + id + " " + thread.getName() + ": " + msg);
+        System.out.println(gap + color + "🖥️" + id + " " + thread.getName() + ": " + msg + RESET);
     }
-
+    private void printWaitingRoom(){
+        
+        String out = new String();
+        for (PriorityBlockingQueue<Patient> queue : queues){
+            // out = new String();
+            if(!queue.isEmpty())
+            for(Patient patient : queue){
+                out += " " + patient.getName() + " |";
+            }   
+            out += "\n";
+        }
+        System.out.println(out);
+    }
 }
