@@ -48,7 +48,7 @@ public class WaitingRoom {
             
             // The model assigns a specialty and a priority value
             patient.setSpecialty(rand.nextInt(NUMSPECIALTIES));
-            patient.setPriority(rand.nextInt(5));
+            patient.setPriority(rand.nextInt(1,5));
             
         mutex.release();
 
@@ -106,9 +106,9 @@ public class WaitingRoom {
         mutex.acquire();
         
             // While the patient isnt the one that comes out of the queue, wait
+            numPatientsWaiting[patient.getSpecialty()]++;
             while(patient.getId() != nextPatientId[patient.getSpecialty()]){
                 print(patient, 0, ": waits.");
-                numPatientsWaiting[patient.getSpecialty()]++;
                 mutex.release();
                 queueSemaphores[patient.getSpecialty()].acquire();
             }
