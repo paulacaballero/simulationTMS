@@ -10,7 +10,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 public class App {
 
     final static int NUMSPECIALTIES = 3;
-    final static int NUMPATIENTS = 10;
+    final static int NUMPATIENTS = 30;
     final static int NUMTRIAGE = 2;
 
     private Doctor doctors[];
@@ -31,7 +31,7 @@ public class App {
         }
 
         // Initialize the waiting room
-        waitingRoom = new WaitingRoom(queues);
+        waitingRoom = new WaitingRoom(queues, NUMPATIENTS, NUMSPECIALTIES);
 
         // Initialize the doctors
         doctors = new Doctor[NUMSPECIALTIES];
@@ -71,6 +71,7 @@ public class App {
     }
 
     public void waitEndOfThreads() {
+        
         try {
             // Stop patient threads
             for (int i = 0; i < NUMPATIENTS; i++) {
@@ -95,13 +96,20 @@ public class App {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+        
     }
-
-    public static void main(String[] args) {
-
-        App app = new App();
-
-        app.startThreads();
-        app.waitEndOfThreads();
+    public void calculateAvgWaitingTime(){
+        int waitingMinutes = waitingRoom.getTotalWaitingTime();
+        waitingMinutes = waitingMinutes / NUMPATIENTS;
+        System.out.println("The average waiting time has been "+ waitingMinutes+" minutes.");
+    }
+    
+        public static void main(String[] args) {
+    
+            App app = new App();
+    
+            app.startThreads();
+            app.waitEndOfThreads();
+            app.calculateAvgWaitingTime();
     }
 }
