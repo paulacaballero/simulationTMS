@@ -146,44 +146,75 @@ public class WaitingRoom {
         
     }
 
-    private void takePatientFromQueue(Doctor doctor) throws InterruptedException{
+    // private void takePatientFromQueue(Doctor doctor) throws InterruptedException{
         
-        print(doctor,2, ": about to take a pacient from the queue.", GREEN);
-        Patient patient = null;
-        // The doctor will remain in the loop until there is a patient in their queue
-        do{
-            mutex.acquire();
-            printWaitingRoom();
-            // We take the patient with the highest priority from the queue of the doctor, with a timeout of 1 second
-            patient = queues[doctor.getSpecialty()].poll(1, TimeUnit.SECONDS);
-            if (patient != null) {
-                // If there is a patient taken from the queue its id is saved in a variable to sort it from the other patients in the queue
-                nextPatientId[doctor.getSpecialty()] = patient.getId();
-                // All the threads in the doctor's queue are signaled
-                queueSemaphores[doctor.getSpecialty()].release(numPatientsWaiting[doctor.getSpecialty()]);
-                mutex.release();
-                // caseInQueue[doctor.getSpecialty()].acquire();
-            } else {
-                print(doctor,2, ": has no patients in their queue.", GREEN);
-                mutex.release();
-                // If there is no patients in the queue the doctor waits until there is a new case
+    //     print(doctor,2, ": about to take a pacient from the queue.", GREEN);
+    //     Patient patient = null;
+    //     // The doctor will remain in the loop until there is a patient in their queue
+    //     do{
+    //         mutex.acquire();
+    //         printWaitingRoom();
+    //         // We take the patient with the highest priority from the queue of the doctor, with a timeout of 1 second
+    //         patient = queues[doctor.getSpecialty()].poll(1, TimeUnit.SECONDS);
+    //         if (patient != null) {
+    //             // If there is a patient taken from the queue its id is saved in a variable to sort it from the other patients in the queue
+    //             nextPatientId[doctor.getSpecialty()] = patient.getId();
+    //             // All the threads in the doctor's queue are signaled
+    //             queueSemaphores[doctor.getSpecialty()].release(numPatientsWaiting[doctor.getSpecialty()]);
+    //             mutex.release();
+    //             // caseInQueue[doctor.getSpecialty()].acquire();
+    //         } else {
+    //             print(doctor,2, ": has no patients in their queue.", GREEN);
+    //             mutex.release();
+    //             // If there is no patients in the queue the doctor waits until there is a new case
                 
-                // Thread.sleep(rand.nextInt(1000));
-            }
+    //             // Thread.sleep(rand.nextInt(1000));
+    //         }
+    //         caseInQueue[doctor.getSpecialty()].acquire();
+    //     } while(patient == null);
+    // }
+    private void takePatientFromQueue(Doctor doctor) throws InterruptedException {
+        print(doctor, 2, ": about to take a patient from the queue.", GREEN);
+    
+        Patient patient = null;
+    
+        while (true) {
+            // El doctor espera hasta que haya un paciente en su cola
             caseInQueue[doctor.getSpecialty()].acquire();
-        } while(patient == null);
+    
+            mutex.acquire();
+            // Intentar tomar al paciente con mayor prioridad de la cola
+            patient = queues[doctor.getSpecialty()].poll();
+            if (patient != null) {
+                // Si hay un paciente, guardar su ID y liberar los semáforos necesarios
+                nextPatientId[doctor.getSpecialty()] = patient.getId();
+                queueSemaphores[doctor.getSpecialty()].release(numPatientsWaiting[doctor.getSpecialty()]);
+                print(doctor, 2, ": took patient " + patient.getName() + " from queue.", GREEN);
+                mutex.release();
+                break; // Salir del bucle porque el doctor tiene un paciente
+            } else {
+                // No hay pacientes en la cola: liberar el mutex y esperar nuevamente
+                print(doctor, 2, ": no patients available in the queue.", GREEN);
+                mutex.release();
+            }
+        }
     }
-    public void entersQueue(Patient patient) throws InterruptedException{
-        
+    
+    
+    public void entersQueue(Patient patient) throws InterruptedException {
         mutex.acquire();
-            // The patient is added to the queue of their assigned specialty
-            print(patient,0, ": has been assigned to queue " + patient.getSpecialty() + " with priority " + patient.getPriority(), RED);
+        try {
+            // El paciente es añadido a la cola de su especialidad asignada
+            print(patient, 0, ": has been assigned to queue " + patient.getSpecialty() + " with priority " + patient.getPriority(), RED);
             queues[patient.getSpecialty()].add(patient);
-            // Signals that a new case has been added to a queue
+    
+            // Solo liberar el semáforo si se añadió un nuevo caso a la cola
             caseInQueue[patient.getSpecialty()].release();
-
-        mutex.release();
+        } finally {
+            mutex.release();
+        }
     }
+    
 
     private void print(Thread thread, int id, String msg, String color) {
         
