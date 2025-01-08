@@ -121,21 +121,30 @@ public class WaitingRoom {
     }
     
     public void waitUntilYourTurn(Patient patient) throws InterruptedException{
+        boolean out = false;
         mutex.acquire();
-        
             // While the patient isnt the one that comes out of the queue, wait
             numPatientsWaiting[patient.getSpecialty()]++;
-            caseInQueue[patient.getSpecialty()].release();
-            while(patient.getId() != nextPatientId[patient.getSpecialty()]){
+            // caseInQueue[patient.getSpecialty()].release();
+        mutex.release();
+            do{
+                mutex.acquire();
+                
+                print(patient, 2, ": waits.", RED);
+                mutex.release();
+
+                queueSemaphores[patient.getSpecialty()].acquire();
+
+                mutex.acquire();
                 int turns = patient.getTurnsWaited();
                 if(turns % 10 == 0 && turns != 0){
                     patient.setPriority(patient.getPriority()+1);
                 }
                 patient.setTurnsWaited(turns + 1);
-                print(patient, 2, ": waits.", RED);
+                out = patient.getId() == nextPatientId[patient.getSpecialty()];
                 mutex.release();
-                queueSemaphores[patient.getSpecialty()].acquire();
-            }
+            }while(out == false);
+            
 
         mutex.acquire();
         // Since the thread exited the queue one less is waiting
