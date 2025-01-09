@@ -1,6 +1,8 @@
 package simulator;
 
 import java.util.Random;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -22,6 +24,7 @@ public class WaitingRoom {
     private Semaphore[] queueSemaphores;
     private Random rand;
     private PriorityBlockingQueue<Patient>[] queues;
+    private BlockingQueue<Patient> entranceQueue;
     private long[] nextPatientId;
     private int[] numPatientsWaiting;
     public int totalWaitingTime;
@@ -42,6 +45,7 @@ public class WaitingRoom {
             caseInQueue[i] = new Semaphore(0);
         }
         rand = new Random();
+        entranceQueue = new LinkedBlockingDeque<>();
         totalWaitingTime = 0;
         this.queues = queues;
         nextPatientId = new long[NUMSPECIALTIES];
@@ -50,11 +54,11 @@ public class WaitingRoom {
 
     public void register(Patient patient) throws InterruptedException{
         
-        mutex.acquire();
+        
             // The patient registers their symptomps
-            Thread.sleep(rand.nextInt(1000));
             print(patient,0, ": registers", RED);
-            
+            Thread.sleep(rand.nextInt(1000));
+        mutex.acquire();
             // The model assigns a specialty and a priority value
             patient.setSpecialty(rand.nextInt(NUMSPECIALTIES));
             patient.setPriority(rand.nextInt(1,5));
@@ -62,6 +66,7 @@ public class WaitingRoom {
         mutex.release();
 
             // The triage has to validate the results of the model
+            entranceQueue.add(patient);
             patientRegistered.release();
             
             triageValidated.acquire();
@@ -73,8 +78,9 @@ public class WaitingRoom {
 
         // The triage staff checks if the values of the model are correct
         patientRegistered.acquire();
+        Patient patient = entranceQueue.poll(1, TimeUnit.SECONDS);
         Thread.sleep(rand.nextInt(1000));
-        print(triage,2, ": The prediction has been validated", YELLOW);
+        print(triage,2, ": The prediction of " + patient.getName() + " has been validated", YELLOW);
         triageValidated.release();
         
     }
