@@ -26,7 +26,6 @@ public class Patient extends Thread {
         this.specialty = specialty;
     }
 
-
     public int getTurnsWaited() {
         return turnsWaited;
     }
@@ -46,15 +45,16 @@ public class Patient extends Thread {
     @Override
     public void run() {
         try {
-            if(this.getId()%2==0){
+            if (this.getId() % 2 == 0) {
                 Thread.sleep(rand.nextInt(10000));
-            }else{
-                Thread.sleep(rand.nextInt(10000)+2000);
+            } else {
+                Thread.sleep(rand.nextInt(10000) + 2000L);
             }
             waitingRoom.register(this);
             waitingRoom.waitUntilYourTurn(this);
             waitingRoom.getsAttended(this);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 

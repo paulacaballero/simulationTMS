@@ -93,7 +93,7 @@ public class WaitingRoom {
         // And waits for the patient to awake
         patientReady.acquire();
         print(doctor,5, ": treating", GREEN);
-        Thread.sleep(rand.nextInt(1000) + 1000);
+        Thread.sleep(rand.nextInt(1000) + 1000L);
         // The treatment is done
         doctorDone.release();
         print(doctor,5, ": treating done", GREEN);
@@ -121,7 +121,7 @@ public class WaitingRoom {
     }
     private void calculateWaitingTime(Patient patient){
         double waitingTime = 0;
-        waitingTime = patient.getTurnsWaited() * 30;
+        waitingTime = patient.getTurnsWaited() * (double)30;
         totalWaitingTime += waitingTime;
         print(patient, 7, "Waited " + waitingTime + " minutes", RESET);
     }
