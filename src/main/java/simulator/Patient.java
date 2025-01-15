@@ -1,22 +1,29 @@
 package simulator;
 
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 
 public class Patient extends Thread {
 
     private WaitingRoom waitingRoom;
+    private Semaphore patientSemaphore;
     private int specialty;
-    private int turnsWaited;
+    private int waitedTime;
     private Random rand;
-    private double waitingTime;
 
     public Patient(WaitingRoom waitingRoom, int id) {
         super("Patient " + id);
         this.waitingRoom = waitingRoom;
-        turnsWaited = 0;
+        waitedTime = 0;
         rand = new Random();
-        waitingTime = 0;
+        patientSemaphore = new Semaphore(0);
     }
+    
+
+    public Semaphore getPatientSemaphore() {
+        return patientSemaphore;
+    }
+
 
     public int getSpecialty() {
         return specialty;
@@ -26,20 +33,13 @@ public class Patient extends Thread {
         this.specialty = specialty;
     }
 
-    public int getTurnsWaited() {
-        return turnsWaited;
+
+    public int getWaitedTime() {
+        return waitedTime;
     }
 
-    public void setTurnsWaited(int turnsWaited) {
-        this.turnsWaited = turnsWaited;
-    }
-
-    public double getWaitingTime() {
-        return waitingTime;
-    }
-
-    public void setWaitingTime(double waitingTime) {
-        this.waitingTime = waitingTime;
+    public void setWaitedTime(int turnsWaited) {
+        this.waitedTime = turnsWaited;
     }
 
     @Override
