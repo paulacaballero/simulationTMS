@@ -9,9 +9,9 @@ import java.util.concurrent.PriorityBlockingQueue;
  */
 public class App {
 
-    final static int NUMSPECIALTIES = 3;
-    final static int NUMPATIENTS = 30;
-    final static int NUMTRIAGE = 2;
+    static final  int NUMSPECIALTIES = 3;
+    static final  int NUMPATIENTS = 30;
+    static final  int NUMTRIAGE = 2;
 
     private Doctor doctors[];
     private Patient patients[];
@@ -94,7 +94,6 @@ public class App {
                 triage[i].join();
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
             Thread.currentThread().interrupt();
         }
         

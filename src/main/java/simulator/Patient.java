@@ -1,6 +1,6 @@
 package simulator;
 
-import java.util.Random;
+import java.security.SecureRandom;
 import java.util.concurrent.Semaphore;
 
 public class Patient extends Thread {
@@ -9,13 +9,13 @@ public class Patient extends Thread {
     private Semaphore patientSemaphore;
     private int specialty;
     private int waitedTime;
-    private Random rand;
+    private SecureRandom rand;
 
     public Patient(WaitingRoom waitingRoom, int id) {
         super("Patient " + id);
         this.waitingRoom = waitingRoom;
         waitedTime = 0;
-        rand = new Random();
+        rand = new SecureRandom();
         patientSemaphore = new Semaphore(0);
     }
     

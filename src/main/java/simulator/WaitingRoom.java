@@ -1,6 +1,6 @@
 package simulator;
 
-import java.util.Random;
+import java.security.SecureRandom;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.PriorityBlockingQueue;
@@ -8,10 +8,10 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 public class WaitingRoom {
-    final static String RESET = "\u001B[0m";
-    final static String RED = "\u001B[31m";
-    final static String GREEN = "\u001B[32m";
-    final static String YELLOW = "\u001B[33m";
+    static final  String RESET = "\u001B[0m";
+    static final  String RED = "\u001B[31m";
+    static final  String GREEN = "\u001B[32m";
+    static final  String YELLOW = "\u001B[33m";
     private int NUMSPECIALTIES;
     private int NUMPATIENTS;
     private Semaphore mutex;
@@ -22,7 +22,7 @@ public class WaitingRoom {
     private Semaphore triageValidated;
     private Semaphore[] caseInQueue;
     private Semaphore[] queueSemaphores;
-    private Random rand;
+    private SecureRandom rand;
     private PriorityBlockingQueue<Patient>[] queues;
     private BlockingQueue<Patient> entranceQueue;
     private long[] nextPatientId;
@@ -44,7 +44,7 @@ public class WaitingRoom {
             queueSemaphores[i] = new Semaphore(0);
             caseInQueue[i] = new Semaphore(0);
         }
-        rand = new Random();
+        rand = new SecureRandom();
         entranceQueue = new LinkedBlockingDeque<>();
         totalWaitingTime = 0;
         this.queues = queues;
