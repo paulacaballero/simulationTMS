@@ -25,7 +25,6 @@ public class WaitingRoom {
     private SecureRandom rand;
     private PriorityBlockingQueue<Patient>[] queues;
     private BlockingQueue<Patient> entranceQueue;
-    private long[] nextPatientId;
     private int[] numPatientsOutofQueue;
     public int totalWaitingTime;
 
@@ -48,7 +47,6 @@ public class WaitingRoom {
         entranceQueue = new LinkedBlockingDeque<>();
         totalWaitingTime = 0;
         this.queues = queues;
-        nextPatientId = new long[NUMSPECIALTIES];
         numPatientsOutofQueue = new int[NUMPATIENTS];
     }
 
@@ -78,7 +76,7 @@ public class WaitingRoom {
 
         // The triage staff checks if the values of the model are correct
         patientRegistered.acquire();
-        Patient patient = entranceQueue.poll(1, TimeUnit.SECONDS);
+        Patient patient = entranceQueue.take();
         Thread.sleep(rand.nextInt(1000));
         print(triage, 2, ": The prediction of " + patient.getName() + " has been validated", YELLOW);
         triageValidated.release();
