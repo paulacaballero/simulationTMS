@@ -1,5 +1,8 @@
 package simulator;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.concurrent.PriorityBlockingQueue;
 
 /**
@@ -9,8 +12,8 @@ import java.util.concurrent.PriorityBlockingQueue;
  */
 public class App {
 
-    final static int NUMSPECIALTIES = 3;
-    final static int NUMPATIENTS = 30;
+    final static int NUMSPECIALTIES = 10;
+    final static int NUMPATIENTS = 200;
     final static int NUMTRIAGE = 2;
 
     private Doctor doctors[];
@@ -26,7 +29,7 @@ public class App {
         queues = new PriorityBlockingQueue[NUMSPECIALTIES];
         for (int i = 0; i < NUMSPECIALTIES; i++) {
             queues[i] = new PriorityBlockingQueue<>(
-                10, (t1, t2) -> Integer.compare(t2.getPriority(), t1.getPriority()) // Descending order by priority
+                    10, (t1, t2) -> Integer.compare(t2.getPriority(), t1.getPriority()) // Descending order by priority
             );
         }
 
@@ -47,7 +50,7 @@ public class App {
 
         // Initialize the triage
         triage = new Triage[NUMTRIAGE];
-        for(int i = 0; i < NUMTRIAGE; i++){
+        for (int i = 0; i < NUMTRIAGE; i++) {
             triage[i] = new Triage(waitingRoom, i);
         }
     }
@@ -59,7 +62,7 @@ public class App {
         }
 
         // Start triage threads
-        for(int i = 0; i < NUMTRIAGE; i++){
+        for (int i = 0; i < NUMTRIAGE; i++) {
             triage[i].start();
         }
 
@@ -67,11 +70,11 @@ public class App {
         for (int i = 0; i < NUMSPECIALTIES; i++) {
             doctors[i].start();
         }
-        
+
     }
 
     public void waitEndOfThreads() {
-        
+
         try {
             // Stop patient threads
             for (int i = 0; i < NUMPATIENTS; i++) {
@@ -97,20 +100,33 @@ public class App {
             e.printStackTrace();
             Thread.currentThread().interrupt();
         }
-        
+
     }
-    public void calculateAvgWaitingTime(){
+
+    public void calculateAvgWaitingTime() {
         int waitingMinutes = waitingRoom.getTotalWaitingTime();
         waitingMinutes = waitingMinutes / NUMPATIENTS;
-        System.out.println("The average waiting time has been "+ waitingMinutes+" minutes.");
+        System.out.println("The average waiting time has been " + waitingMinutes + " minutes.");
+        saveAverageWaitingTimeToFile(waitingMinutes);
     }
-    
-        public static void main(String[] args) {
-    
+
+    private void saveAverageWaitingTimeToFile(int averageWaitingTime) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("10spe200pat.txt", true))) {
+            writer.write(String.valueOf(averageWaitingTime));
+            writer.newLine();
+        } catch (IOException e) {
+            System.err.println("Error writing to file: " + e.getMessage());
+        }
+    }
+
+    public static void main(String[] args) {
+        for (int i = 0; i < 10; i++) {
             App app = new App();
-    
+
             app.startThreads();
             app.waitEndOfThreads();
             app.calculateAvgWaitingTime();
+        }
+
     }
 }
